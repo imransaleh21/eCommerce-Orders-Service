@@ -27,4 +27,6 @@ RUN dotnet publish "./eCommerceSolution.API.csproj" -c $BUILD_CONFIGURATION -o /
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV MONGO_HOST=localhost
+ENV MONGO_PORT=27017
 ENTRYPOINT ["dotnet", "eCommerceSolution.API.dll"]
