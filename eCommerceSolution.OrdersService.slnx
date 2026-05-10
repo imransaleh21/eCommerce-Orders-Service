@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="eCommerceSolution.API/eCommerceSolution.API.csproj" />
+  <Project Path="OrdersMicroService.BusinessLogicLayer/OrdersMicroService.BusinessLogicLayer.csproj" Id="58cac70b-4e96-4e87-865b-dd844b3e540c" />
+  <Project Path="OrdersMicroService.DataAccessLayer/OrdersMicroService.DataAccessLayer.csproj" Id="980e3ab8-dcd7-43b9-b594-90ba35ffdb7f" />
+</Solution>
