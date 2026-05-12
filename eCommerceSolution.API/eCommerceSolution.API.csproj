@@ -20,4 +20,8 @@
     <ProjectReference Include="..\OrdersMicroService.DataAccessLayer\OrdersMicroService.DataAccessLayer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
 </Project>
