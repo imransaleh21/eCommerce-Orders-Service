@@ -3,7 +3,7 @@ using OrdersMicroService.DataAccessLayer.Entities;
 
 namespace OrdersMicroService.DataAccessLayer.RepositoriesContract;
 
-internal interface IOrdersRepository
+public interface IOrdersRepository
 {
     /// <summary>
     /// Asynchronously retrieves a collection of orders.

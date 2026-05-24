@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using OrdersMicroService.BusinessLogicLayer.Mappers;
 using FluentValidation;
 using OrdersMicroService.BusinessLogicLayer.Validators;
+using OrdersMicroService.BusinessLogicLayer.ServicesContract;
+using OrdersMicroService.BusinessLogicLayer.Services;
 
 namespace OrdersMicroService.BusinessLogicLayer;
 public static class DependencyInjection
@@ -12,6 +14,7 @@ public static class DependencyInjection
         //services.AddScoped<IOrdersService, OrdersService>();
         services.AddAutoMapper(cfg => { }, typeof(OrderAddRequestToOrderMappingProfile).Assembly);
         services.AddValidatorsFromAssemblyContaining<OrderAddRequestValidator>();
+        services.AddScoped<IOrdersService, OrdersService>();
         return services;
     }
 }

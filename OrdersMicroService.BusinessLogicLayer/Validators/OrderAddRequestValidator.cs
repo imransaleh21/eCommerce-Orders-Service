@@ -10,7 +10,7 @@ public class OrderAddRequestValidator : AbstractValidator<OrderAddRequest>
             .NotEmpty().WithErrorCode("UserID can't be blank");
         RuleFor(orderAddRequest => orderAddRequest.OrderDate)
             .NotEmpty().WithErrorCode("OrderDate can't be blank");
-        RuleFor(orderAddRequest => orderAddRequest.OrderItems)
-            .NotEmpty().WithErrorCode("OrderItems can't be blank");
+        RuleForEach(orderAddRequest => orderAddRequest.OrderItems)
+           .SetValidator(new OrderItemAddRequestValidator());
     }
 }
