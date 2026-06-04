@@ -14,18 +14,13 @@ public class OrdersService : IOrdersService
     private readonly IMapper _mapper;
     private readonly IValidator<OrderAddRequest> _orderAddValidator;
     private readonly IValidator<OrderUpdateRequest> _orderUpdateValidator;
-    private readonly IValidator<OrderItemAddRequest> _orderItemAddValidator;
-    private readonly IValidator<OrderItemUpdateRequest> _orderItemUpdateValidator;
     public OrdersService(IOrdersRepository orderRepository, IMapper mapper,
-        IValidator<OrderItemAddRequest> orderItemAddValidator, IValidator<OrderItemUpdateRequest> orderItemUpdateRequestValidator,
         IValidator<OrderAddRequest> orderAddRequestValidator, IValidator<OrderUpdateRequest> orderUpdateRequestValidator)
     {
         _orderRepository = orderRepository;
         _mapper = mapper;
         _orderAddValidator = orderAddRequestValidator;
         _orderUpdateValidator = orderUpdateRequestValidator;
-        _orderItemAddValidator = orderItemAddValidator;
-        _orderItemUpdateValidator = orderItemUpdateRequestValidator;
     }
     public async Task<OrderResponse?> AddOrder(OrderAddRequest orderAddRequest)
     {
@@ -53,24 +48,31 @@ public class OrdersService : IOrdersService
         return _mapper.Map<OrderResponse>(addedOrder);
     }
 
-    public Task<bool> DeleteOrder(Guid orderID)
+    public async Task<bool> DeleteOrder(Guid orderID)
     {
-        throw new NotImplementedException();
+        FilterDefinition<Order> filterDefinition = Builders<Order>.Filter.Eq(o => o.OrderID, orderID);
+        Order? existingOrder = await _orderRepository.GetOrderByCondition(filterDefinition);
+        if (existingOrder is null) return false;
+        return await _orderRepository.DeleteOrder(orderID);
     }
 
-    public Task<OrderResponse?> GetOrderByCondition(FilterDefinition<Order> filter)
+    public async Task<OrderResponse?> GetOrderByCondition(FilterDefinition<Order> filter)
     {
-        throw new NotImplementedException();
+        Order? order = await _orderRepository.GetOrderByCondition(filter);
+        if (order is null) return null;
+        return _mapper.Map<OrderResponse>(order);
     }
 
-    public Task<List<OrderResponse?>> GetOrders()
+    public async Task<List<OrderResponse?>> GetOrders()
     {
-        throw new NotImplementedException();
+        IEnumerable<Order> orders = await _orderRepository.GetOrders();
+        return orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o)).ToList();
     }
 
-    public Task<List<OrderResponse?>> GetOrdersByCondition(FilterDefinition<Order> filter)
+    public async Task<List<OrderResponse?>> GetOrdersByCondition(FilterDefinition<Order> filter)
     {
-        throw new NotImplementedException();
+        IEnumerable<Order?> orders = await _orderRepository.GetOrdersByCondition(filter);
+        return orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o)).ToList();
     }
 
     public async Task<OrderResponse?> UpdateOrder(OrderUpdateRequest orderUpdateRequest)
