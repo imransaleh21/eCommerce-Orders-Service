@@ -7,13 +7,21 @@ namespace OrdersMicroService.DataAccessLayer.Repositories;
 public class OrdersRepository : IOrdersRepository
 {
     private readonly IMongoCollection<Order> _orders;
-    private readonly string collateralName = "Orders";
+    private readonly string collateralName = "orders";
     public OrdersRepository(IMongoDatabase database)
     {
         _orders = database.GetCollection<Order>(collateralName);
     }
      public async Task<Order?> AddOrder(Order order)
     {
+        order.OrderID = Guid.NewGuid();
+        order._id = order.OrderID;
+
+        foreach (var orderItem in order.OrderItems)
+        {
+            orderItem._id = Guid.NewGuid();   
+        }
+
         await _orders.InsertOneAsync(order);
         return order;
     }
@@ -41,7 +49,12 @@ public class OrdersRepository : IOrdersRepository
 
     public async Task<Order?> UpdateOrder(Order order)
     {
-        var result = await _orders.ReplaceOneAsync(o => o.OrderID == order.OrderID, order);
+        FilterDefinition<Order> filter = Builders<Order>.Filter.Eq(o => o.OrderID, order.OrderID);
+        Order? existingOrder = (await _orders.FindAsync(filter)).FirstOrDefault();
+        if(existingOrder == null) return null; 
+
+        order._id = existingOrder._id;
+        var result = await _orders.ReplaceOneAsync(filter, order);
         return result.ModifiedCount > 0 ? order : null;
     }
 }

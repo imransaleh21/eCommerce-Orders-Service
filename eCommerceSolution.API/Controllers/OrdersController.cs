@@ -30,7 +30,7 @@ namespace eCommerceSolution.API.Controllers
             return orders;
         }
 
-        [HttpGet("/search/productid/{productId}")]
+        [HttpGet("search/productid/{productId}")]
         public async Task<IEnumerable<OrderResponse?>> GetOrdersByProductId(Guid productId)
         {
             FilterDefinition<Order> filter = Builders<Order>.Filter.ElemMatch(o => o.OrderItems,
@@ -39,21 +39,21 @@ namespace eCommerceSolution.API.Controllers
             List<OrderResponse?> orders = await _ordersService.GetOrdersByCondition(filter);
             return orders;
         }
-        [HttpGet("/search/orderid/{orderId}")]
+        [HttpGet("search/orderid/{orderId}")]
         public async Task<IEnumerable<OrderResponse?>> GetOrdersByOrderId(Guid orderId)
         {
             FilterDefinition<Order> filter = Builders<Order>.Filter.Eq(o => o.OrderID, orderId);
             List<OrderResponse?> orders = await _ordersService.GetOrdersByCondition(filter);
             return orders;
         }
-        [HttpGet("/search/orderdate/{orderDate}")]
+        [HttpGet("search/orderdate/{orderDate}")]
         public async Task<IEnumerable<OrderResponse?>> GetOrdersByOrderDate(DateTime orderDate)
         {
             FilterDefinition<Order> filter = Builders<Order>.Filter.Eq(o => o.OrderDate.ToString("yyyy-MM-dd"), orderDate.ToString("yyyy-MM-dd"));
             List<OrderResponse?> orders = await _ordersService.GetOrdersByCondition(filter);
             return orders;
         }
-        [HttpGet("/search/userid/{userId}")]
+        [HttpGet("search/userid/{userId}")]
         public async Task<IEnumerable<OrderResponse?>> GetOrdersByUserId(Guid userId)
         {
             FilterDefinition<Order> filter = Builders<Order>.Filter.Eq(o => o.UserID, userId);
