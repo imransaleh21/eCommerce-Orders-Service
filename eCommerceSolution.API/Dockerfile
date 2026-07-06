@@ -6,6 +6,7 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 7070
 EXPOSE 7071
+ENV ASPNETCORE_URLS=http://+:7070
 
 
 # This stage is used to build the service project

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using eCommerce.Core.HttpClients;
 using FluentValidation;
 using FluentValidation.Results;
 using MongoDB.Driver;
@@ -14,13 +15,16 @@ public class OrdersService : IOrdersService
     private readonly IMapper _mapper;
     private readonly IValidator<OrderAddRequest> _orderAddValidator;
     private readonly IValidator<OrderUpdateRequest> _orderUpdateValidator;
+    private readonly UsersMicroserviceClient _usersMicroserviceClient;
     public OrdersService(IOrdersRepository orderRepository, IMapper mapper,
-        IValidator<OrderAddRequest> orderAddRequestValidator, IValidator<OrderUpdateRequest> orderUpdateRequestValidator)
+        IValidator<OrderAddRequest> orderAddRequestValidator, IValidator<OrderUpdateRequest> orderUpdateRequestValidator,
+        UsersMicroserviceClient usersMicroserviceClient)
     {
         _orderRepository = orderRepository;
         _mapper = mapper;
         _orderAddValidator = orderAddRequestValidator;
         _orderUpdateValidator = orderUpdateRequestValidator;
+        _usersMicroserviceClient = usersMicroserviceClient;
     }
     public async Task<OrderResponse?> AddOrder(OrderAddRequest orderAddRequest)
     {
@@ -32,7 +36,11 @@ public class OrdersService : IOrdersService
             throw new ValidationException(errors);
         }
         // Logic for validate UserID in Users microservice
-        // ...
+        UserDTO? userID = await _usersMicroserviceClient.GetUserByIdAsync(orderAddRequest.UserID);
+        if (userID == null)
+        {
+            throw new ValidationException($"User with ID {orderAddRequest.UserID} does not exist in User Table.");
+        }
 
         // OrderAddRequest to Order mapping
         Order order = _mapper.Map<Order>(orderAddRequest);
@@ -85,7 +93,12 @@ public class OrdersService : IOrdersService
             throw new ValidationException(errors);
         }
         // Logic for validate UserID in Users microservice
-        // ...
+        UserDTO? userD = await _usersMicroserviceClient.GetUserByIdAsync(orderUpdateRequest.UserID);
+        if (userD != null)
+        {
+            throw new ValidationException($"User with ID {orderUpdateRequest.UserID} does not exist in User Table.");
+        }
+
         Order order = _mapper.Map<Order>(orderUpdateRequest);
         foreach (var orderItem in order.OrderItems)
         {

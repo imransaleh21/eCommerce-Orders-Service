@@ -1,3 +1,4 @@
+using eCommerce.Core.HttpClients;
 using eCommerceSolution.API.MiddleWares;
 using OrdersMicroService.BusinessLogicLayer;
 using OrdersMicroService.DataAccessLayer;
@@ -13,13 +14,24 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Enable CORS if needed
-builder.Services.AddCors( options =>{
-        options.AddDefaultPolicy(policy =>{
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
+});
+
+// 
+builder.Services.AddHttpClient<UsersMicroserviceClient>(
+    client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["UsersMicroservice:BaseUrl"] ?? throw new InvalidOperationException("UsersMicroservice:BaseUrl is not configured."));
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

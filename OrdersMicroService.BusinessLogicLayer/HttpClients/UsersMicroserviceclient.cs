@@ -3,10 +3,10 @@ using System.Net.Http.Json;
 
 namespace eCommerce.Core.HttpClients
 {
-    public class UsersMicroserviceclient
+    public class UsersMicroserviceClient
     {
         private readonly HttpClient _httpClient;
-        public UsersMicroserviceclient(HttpClient httpClient)
+        public UsersMicroserviceClient(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
