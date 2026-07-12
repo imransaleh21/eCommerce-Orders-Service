@@ -7,6 +7,7 @@ services:
     container_name: orders-api-container
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
       - MONGO_HOST=mongodb-container
       - MONGO_PORT=27017
       - MONGO_DATABASE=OrdersDatabase
@@ -14,8 +15,45 @@ services:
       # - MONGO_PASS=admin
     ports:
       - "7070:8080"
+    depends_on:
+      - mongodb-container
     networks:
       - ecommerce-network
+    
+   products-api-container:
+    image: imran88/ecommerce-products-microservice:v1.0
+    container_name: products-api-container
+    environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_HTTP_PORTS=8080
+        - MYSQL_HOST=mysql-db-container
+        - MYSQL_PORT=3306
+        - MYSQL_USER=root
+        - MYSQL_PASS=mysql
+        - MYSQL_DATABASE=eCommerceProducts
+    ports:
+        - "6060:8080"
+    depends_on:
+        - mysql-db-container
+    networks:
+        - ecommerce-network
+
+   users-api-container:
+    image: imran88/ecommerce-users-microservice:v1.2
+    container_name: users-api-container
+    environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_HTTP_PORTS=8080
+        - POSTGRES_HOST=postgresql-db-container
+        - POSTGRES_PORT=5432
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_DB=eCommerceUsers
+    ports:
+        - "5050:8080"
+    depends_on:
+        - postgresql-db-container
+    networks:
+        - ecommerce-network
     
    mongodb-container:
         image: mongo:latest
@@ -27,6 +65,34 @@ services:
         networks:
             - ecommerce-network
         hostname: mongodb-container
+
+   mysql-db-container:
+      image: mysql:latest
+      container_name: mysql-db-container
+      environment:
+          MYSQL_ROOT_PASSWORD: mysql
+      ports:
+          - "3306:3306"
+      volumes:
+          - ../eCommerce-Products-Service/db.sql:/docker-entrypoint-initdb.d/db.sql
+      networks:
+          - ecommerce-network
+      hostname: mysql-db-container
+
+   postgresql-db-container:
+        image: postgres:latest
+        container_name: postgresql-db-container
+        environment:
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_DB: eCommerceUsers
+        ports:
+            - "5432:5432"
+        volumes:
+            - ../eCommerce-Users-Service:/docker-entrypoint-initdb.d
+        networks:
+            - ecommerce-network
+        hostname: postgresql-db-container
 
 networks:
     ecommerce-network:
