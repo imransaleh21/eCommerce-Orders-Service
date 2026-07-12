@@ -1,0 +1,33 @@
+services:
+   orders-api-container:
+    image: imran88/ecommerce-orders-microservice:v1.1
+    build:
+      context: .
+      dockerfile: eCommerceSolution.API/Dockerfile
+    container_name: orders-api-container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MONGO_HOST=mongodb-container
+      - MONGO_PORT=27017
+      - MONGO_DATABASE=OrdersDatabase
+      # - MONGO_USER=admin
+      # - MONGO_PASS=admin
+    ports:
+      - "7070:8080"
+    networks:
+      - ecommerce-network
+    
+   mongodb-container:
+        image: mongo:latest
+        container_name: mongodb-container
+        ports:
+            - "27017:27017"
+        volumes:
+            - ./init.js:/docker-entrypoint-initdb.d/init.js
+        networks:
+            - ecommerce-network
+        hostname: mongodb-container
+
+networks:
+    ecommerce-network:
+        driver: bridge
