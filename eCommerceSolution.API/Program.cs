@@ -1,6 +1,7 @@
 using eCommerce.Core.HttpClients;
 using eCommerceSolution.API.MiddleWares;
 using OrdersMicroService.BusinessLogicLayer;
+using OrdersMicroService.BusinessLogicLayer.HttpClients;
 using OrdersMicroService.DataAccessLayer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,11 +25,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 
+// Configure HttpClient for microservices
 builder.Services.AddHttpClient<UsersMicroserviceClient>(
     client =>
     {
         client.BaseAddress = new Uri(builder.Configuration["UsersMicroservice:BaseUrl"] ?? throw new InvalidOperationException("UsersMicroservice:BaseUrl is not configured."));
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    });
+builder.Services.AddHttpClient<ProductsMicroserviceClient>(
+    client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["ProductsMicroservice:BaseUrl"] ?? throw new InvalidOperationException("ProductsMicroservice:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     });
 
