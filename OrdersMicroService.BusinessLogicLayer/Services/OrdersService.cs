@@ -4,6 +4,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using MongoDB.Driver;
 using OrdersMicroService.BusinessLogicLayer.DTOs;
+using OrdersMicroService.BusinessLogicLayer.HttpClients;
 using OrdersMicroService.BusinessLogicLayer.ServicesContract;
 using OrdersMicroService.DataAccessLayer.Entities;
 using OrdersMicroService.DataAccessLayer.RepositoriesContract;
@@ -16,15 +17,17 @@ public class OrdersService : IOrdersService
     private readonly IValidator<OrderAddRequest> _orderAddValidator;
     private readonly IValidator<OrderUpdateRequest> _orderUpdateValidator;
     private readonly UsersMicroserviceClient _usersMicroserviceClient;
+    private readonly ProductsMicroserviceClient _productsMicroserviceClient;
     public OrdersService(IOrdersRepository orderRepository, IMapper mapper,
         IValidator<OrderAddRequest> orderAddRequestValidator, IValidator<OrderUpdateRequest> orderUpdateRequestValidator,
-        UsersMicroserviceClient usersMicroserviceClient)
+        UsersMicroserviceClient usersMicroserviceClient, ProductsMicroserviceClient productsMicroserviceClient)
     {
         _orderRepository = orderRepository;
         _mapper = mapper;
         _orderAddValidator = orderAddRequestValidator;
         _orderUpdateValidator = orderUpdateRequestValidator;
         _usersMicroserviceClient = usersMicroserviceClient;
+        _productsMicroserviceClient = productsMicroserviceClient;
     }
     public async Task<OrderResponse?> AddOrder(OrderAddRequest orderAddRequest)
     {
@@ -39,13 +42,19 @@ public class OrdersService : IOrdersService
         UserDTO? userID = await _usersMicroserviceClient.GetUserByIdAsync(orderAddRequest.UserID);
         if (userID == null)
         {
-            throw new ValidationException($"User with ID {orderAddRequest.UserID} does not exist in User Table.");
+            throw new ValidationException($"User with ID {orderAddRequest.UserID} does not exist in Users Table.");
         }
 
         // OrderAddRequest to Order mapping
         Order order = _mapper.Map<Order>(orderAddRequest);
         foreach (var orderItem in order.OrderItems)
         {
+            // Logic to Validate ProductID in Products microservice can be added here
+            ProductDTO? product = await _productsMicroserviceClient.GetProductByIdAsync(orderItem.ProductID);
+            if (product == null)
+            {
+                throw new ValidationException($"Product with ID {orderItem.ProductID} does not exist in Products Table.");
+            }
             orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
         }
         order.TotalBill = order.OrderItems.Sum(oi => oi.TotalPrice);
@@ -93,8 +102,8 @@ public class OrdersService : IOrdersService
             throw new ValidationException(errors);
         }
         // Logic for validate UserID in Users microservice
-        UserDTO? userD = await _usersMicroserviceClient.GetUserByIdAsync(orderUpdateRequest.UserID);
-        if (userD != null)
+        UserDTO? userID = await _usersMicroserviceClient.GetUserByIdAsync(orderUpdateRequest.UserID);
+        if (userID == null)
         {
             throw new ValidationException($"User with ID {orderUpdateRequest.UserID} does not exist in User Table.");
         }
@@ -102,6 +111,12 @@ public class OrdersService : IOrdersService
         Order order = _mapper.Map<Order>(orderUpdateRequest);
         foreach (var orderItem in order.OrderItems)
         {
+            // Logic to Validate ProductID in Products microservice can be added here
+            ProductDTO? product = await _productsMicroserviceClient.GetProductByIdAsync(orderItem.ProductID);
+            if (product == null)
+            {
+                throw new ValidationException($"Product with ID {orderItem.ProductID} does not exist in Products Table.");
+            }
             orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
         }
         order.TotalBill = order.OrderItems.Sum(oi => oi.TotalPrice);
