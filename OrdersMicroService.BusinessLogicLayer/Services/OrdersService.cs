@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using eCommerce.Core.HttpClients;
 using FluentValidation;
 using FluentValidation.Results;
@@ -47,6 +47,7 @@ public class OrdersService : IOrdersService
 
         // OrderAddRequest to Order mapping
         Order order = _mapper.Map<Order>(orderAddRequest);
+        var productMap = new Dictionary<Guid, ProductDTO>();
         foreach (var orderItem in order.OrderItems)
         {
             // Logic to Validate ProductID in Products microservice can be added here
@@ -55,6 +56,7 @@ public class OrdersService : IOrdersService
             {
                 throw new ValidationException($"Product with ID {orderItem.ProductID} does not exist in Products Table.");
             }
+            productMap[orderItem.ProductID] = product;
             orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
         }
         order.TotalBill = order.OrderItems.Sum(oi => oi.TotalPrice);
@@ -62,7 +64,17 @@ public class OrdersService : IOrdersService
         // Add order to database
         Order? addedOrder = await _orderRepository.AddOrder(order);
         if (addedOrder is null) return null;
-        return _mapper.Map<OrderResponse>(addedOrder);
+        OrderResponse orderResponse = _mapper.Map<OrderResponse>(addedOrder);
+        if (orderResponse.OrderItems is not null)
+        {
+            var updatedOrderItems = orderResponse.OrderItems.Select(item =>
+                productMap.TryGetValue(item.ProductID, out var product)
+                    ? item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory }
+                    : item
+            ).ToList();
+            orderResponse = orderResponse with { OrderItems = updatedOrderItems };
+        }
+        return orderResponse;
     }
 
     public async Task<bool> DeleteOrder(Guid orderID)
@@ -109,6 +121,7 @@ public class OrdersService : IOrdersService
         }
 
         Order order = _mapper.Map<Order>(orderUpdateRequest);
+        var productMap = new Dictionary<Guid, ProductDTO>();
         foreach (var orderItem in order.OrderItems)
         {
             // Logic to Validate ProductID in Products microservice can be added here
@@ -117,11 +130,23 @@ public class OrdersService : IOrdersService
             {
                 throw new ValidationException($"Product with ID {orderItem.ProductID} does not exist in Products Table.");
             }
+            productMap[orderItem.ProductID] = product;
             orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
         }
         order.TotalBill = order.OrderItems.Sum(oi => oi.TotalPrice);
         Order? updatedOrder = await _orderRepository.UpdateOrder(order);
         if (updatedOrder is null) return null;
-        return _mapper.Map<OrderResponse>(updatedOrder);
+        
+        OrderResponse orderResponse = _mapper.Map<OrderResponse>(updatedOrder);
+        if (orderResponse.OrderItems is not null)
+        {
+            var updatedOrderItems = orderResponse.OrderItems.Select(item =>
+                productMap.TryGetValue(item.ProductID, out var product)
+                    ? item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory }
+                    : item
+            ).ToList();
+            orderResponse = orderResponse with { OrderItems = updatedOrderItems };
+        }
+        return orderResponse;
     }
 }
