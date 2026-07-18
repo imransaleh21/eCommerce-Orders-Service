@@ -65,16 +65,7 @@ public class OrdersService : IOrdersService
         Order? addedOrder = await _orderRepository.AddOrder(order);
         if (addedOrder is null) return null;
         OrderResponse orderResponse = _mapper.Map<OrderResponse>(addedOrder);
-        if (orderResponse.OrderItems is not null)
-        {
-            var updatedOrderItems = orderResponse.OrderItems.Select(item =>
-                productMap.TryGetValue(item.ProductID, out var product)
-                    ? item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory }
-                    : item
-            ).ToList();
-            orderResponse = orderResponse with { OrderItems = updatedOrderItems };
-        }
-        return orderResponse;
+        return PopulateProductDetailsFromMap(orderResponse, productMap);
     }
 
     public async Task<bool> DeleteOrder(Guid orderID)
@@ -89,19 +80,22 @@ public class OrdersService : IOrdersService
     {
         Order? order = await _orderRepository.GetOrderByCondition(filter);
         if (order is null) return null;
-        return _mapper.Map<OrderResponse>(order);
+        OrderResponse orderResponse = _mapper.Map<OrderResponse>(order);
+        return await PopulateProductDetailsAsync(orderResponse);
     }
 
     public async Task<List<OrderResponse?>> GetOrders()
     {
         IEnumerable<Order> orders = await _orderRepository.GetOrders();
-        return orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o)).ToList();
+        var mapped = orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o));
+        return await PopulateProductDetailsListAsync(mapped);
     }
 
     public async Task<List<OrderResponse?>> GetOrdersByCondition(FilterDefinition<Order> filter)
     {
         IEnumerable<Order?> orders = await _orderRepository.GetOrdersByCondition(filter);
-        return orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o)).ToList();
+        var mapped = orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o));
+        return await PopulateProductDetailsListAsync(mapped);
     }
 
     public async Task<OrderResponse?> UpdateOrder(OrderUpdateRequest orderUpdateRequest)
@@ -138,15 +132,49 @@ public class OrdersService : IOrdersService
         if (updatedOrder is null) return null;
         
         OrderResponse orderResponse = _mapper.Map<OrderResponse>(updatedOrder);
-        if (orderResponse.OrderItems is not null)
+        return PopulateProductDetailsFromMap(orderResponse, productMap);
+    }
+
+    private OrderResponse PopulateProductDetailsFromMap(OrderResponse orderResponse, Dictionary<Guid, ProductDTO> productMap)
+    {
+        if (orderResponse.OrderItems is null) return orderResponse;
+
+        var updatedOrderItems = orderResponse.OrderItems.Select(item =>
+            productMap.TryGetValue(item.ProductID, out var product)
+                ? item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory }
+                : item
+        ).ToList();
+
+        return orderResponse with { OrderItems = updatedOrderItems };
+    }
+
+    private async Task<OrderResponse?> PopulateProductDetailsAsync(OrderResponse? orderResponse)
+    {
+        if (orderResponse is null || orderResponse.OrderItems is null) return orderResponse;
+
+        var updatedOrderItems = new List<OrderItemResponse>();
+        foreach (var item in orderResponse.OrderItems)
         {
-            var updatedOrderItems = orderResponse.OrderItems.Select(item =>
-                productMap.TryGetValue(item.ProductID, out var product)
-                    ? item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory }
-                    : item
-            ).ToList();
-            orderResponse = orderResponse with { OrderItems = updatedOrderItems };
+            ProductDTO? product = await _productsMicroserviceClient.GetProductByIdAsync(item.ProductID);
+            if (product is not null)
+            {
+                updatedOrderItems.Add(item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory });
+            }
+            else
+            {
+                updatedOrderItems.Add(item);
+            }
         }
-        return orderResponse;
+        return orderResponse with { OrderItems = updatedOrderItems };
+    }
+
+    private async Task<List<OrderResponse?>> PopulateProductDetailsListAsync(IEnumerable<OrderResponse?> orderResponses)
+    {
+        var updatedResponses = new List<OrderResponse?>();
+        foreach (var res in orderResponses)
+        {
+            updatedResponses.Add(await PopulateProductDetailsAsync(res));
+        }
+        return updatedResponses;
     }
 }
