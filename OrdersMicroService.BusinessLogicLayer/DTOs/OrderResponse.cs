@@ -5,5 +5,7 @@ public record OrderResponse(
     Guid UserID,
     DateTime OrderDate,
     decimal TotalBill,
-    List<OrderItemResponse> OrderItems
+    List<OrderItemResponse> OrderItems,
+    string Email = "",
+    string PersonName = ""
     );

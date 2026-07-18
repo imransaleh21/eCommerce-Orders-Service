@@ -39,8 +39,8 @@ public class OrdersService : IOrdersService
             throw new ValidationException(errors);
         }
         // Logic for validate UserID in Users microservice
-        UserDTO? userID = await _usersMicroserviceClient.GetUserByIdAsync(orderAddRequest.UserID);
-        if (userID == null)
+        UserDTO? user = await _usersMicroserviceClient.GetUserByIdAsync(orderAddRequest.UserID);
+        if (user == null)
         {
             throw new ValidationException($"User with ID {orderAddRequest.UserID} does not exist in Users Table.");
         }
@@ -65,7 +65,7 @@ public class OrdersService : IOrdersService
         Order? addedOrder = await _orderRepository.AddOrder(order);
         if (addedOrder is null) return null;
         OrderResponse orderResponse = _mapper.Map<OrderResponse>(addedOrder);
-        return PopulateProductDetailsFromMap(orderResponse, productMap);
+        return PopulateOrderResponseDetailsFromMapAndUser(orderResponse, productMap, user);
     }
 
     public async Task<bool> DeleteOrder(Guid orderID)
@@ -81,21 +81,21 @@ public class OrdersService : IOrdersService
         Order? order = await _orderRepository.GetOrderByCondition(filter);
         if (order is null) return null;
         OrderResponse orderResponse = _mapper.Map<OrderResponse>(order);
-        return await PopulateProductDetailsAsync(orderResponse);
+        return await PopulateOrderResponseDetailsAsync(orderResponse);
     }
 
     public async Task<List<OrderResponse?>> GetOrders()
     {
         IEnumerable<Order> orders = await _orderRepository.GetOrders();
         var mapped = orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o));
-        return await PopulateProductDetailsListAsync(mapped);
+        return await PopulateOrderResponseDetailsListAsync(mapped);
     }
 
     public async Task<List<OrderResponse?>> GetOrdersByCondition(FilterDefinition<Order> filter)
     {
         IEnumerable<Order?> orders = await _orderRepository.GetOrdersByCondition(filter);
         var mapped = orders.Select(o => o == null ? null : _mapper.Map<OrderResponse>(o));
-        return await PopulateProductDetailsListAsync(mapped);
+        return await PopulateOrderResponseDetailsListAsync(mapped);
     }
 
     public async Task<OrderResponse?> UpdateOrder(OrderUpdateRequest orderUpdateRequest)
@@ -108,8 +108,8 @@ public class OrdersService : IOrdersService
             throw new ValidationException(errors);
         }
         // Logic for validate UserID in Users microservice
-        UserDTO? userID = await _usersMicroserviceClient.GetUserByIdAsync(orderUpdateRequest.UserID);
-        if (userID == null)
+        UserDTO? user = await _usersMicroserviceClient.GetUserByIdAsync(orderUpdateRequest.UserID);
+        if (user == null)
         {
             throw new ValidationException($"User with ID {orderUpdateRequest.UserID} does not exist in User Table.");
         }
@@ -130,13 +130,18 @@ public class OrdersService : IOrdersService
         order.TotalBill = order.OrderItems.Sum(oi => oi.TotalPrice);
         Order? updatedOrder = await _orderRepository.UpdateOrder(order);
         if (updatedOrder is null) return null;
-        
+
         OrderResponse orderResponse = _mapper.Map<OrderResponse>(updatedOrder);
-        return PopulateProductDetailsFromMap(orderResponse, productMap);
+        return PopulateOrderResponseDetailsFromMapAndUser(orderResponse, productMap, user);
     }
 
-    private OrderResponse PopulateProductDetailsFromMap(OrderResponse orderResponse, Dictionary<Guid, ProductDTO> productMap)
+    private OrderResponse PopulateOrderResponseDetailsFromMapAndUser(OrderResponse orderResponse, Dictionary<Guid, ProductDTO> productMap, UserDTO? user)
     {
+        if (user is not null)
+        {
+            orderResponse = orderResponse with { Email = user.Email, PersonName = user.PersonName };
+        }
+
         if (orderResponse.OrderItems is null) return orderResponse;
 
         var updatedOrderItems = orderResponse.OrderItems.Select(item =>
@@ -148,32 +153,42 @@ public class OrdersService : IOrdersService
         return orderResponse with { OrderItems = updatedOrderItems };
     }
 
-    private async Task<OrderResponse?> PopulateProductDetailsAsync(OrderResponse? orderResponse)
+    private async Task<OrderResponse?> PopulateOrderResponseDetailsAsync(OrderResponse? orderResponse)
     {
-        if (orderResponse is null || orderResponse.OrderItems is null) return orderResponse;
+        if (orderResponse is null) return null;
 
-        var updatedOrderItems = new List<OrderItemResponse>();
-        foreach (var item in orderResponse.OrderItems)
+        UserDTO? user = await _usersMicroserviceClient.GetUserByIdAsync(orderResponse.UserID);
+        if (user is null)
+            throw new ValidationException($"User with ID {orderResponse.UserID} does not exist in Users Table.");
+        else
+            orderResponse = orderResponse with { Email = user.Email, PersonName = user.PersonName };
+
+        if (orderResponse.OrderItems is not null)
         {
-            ProductDTO? product = await _productsMicroserviceClient.GetProductByIdAsync(item.ProductID);
-            if (product is not null)
+            var updatedOrderItems = new List<OrderItemResponse>();
+            foreach (var item in orderResponse.OrderItems)
             {
-                updatedOrderItems.Add(item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory });
+                ProductDTO? product = await _productsMicroserviceClient.GetProductByIdAsync(item.ProductID);
+                if (product is not null)
+                {
+                    updatedOrderItems.Add(item with { ProductName = product.ProductName, ProductCategory = product.ProductCategory });
+                }
+                else
+                {
+                    updatedOrderItems.Add(item);
+                }
             }
-            else
-            {
-                updatedOrderItems.Add(item);
-            }
+            orderResponse = orderResponse with { OrderItems = updatedOrderItems };
         }
-        return orderResponse with { OrderItems = updatedOrderItems };
+        return orderResponse;
     }
 
-    private async Task<List<OrderResponse?>> PopulateProductDetailsListAsync(IEnumerable<OrderResponse?> orderResponses)
+    private async Task<List<OrderResponse?>> PopulateOrderResponseDetailsListAsync(IEnumerable<OrderResponse?> orderResponses)
     {
         var updatedResponses = new List<OrderResponse?>();
         foreach (var res in orderResponses)
         {
-            updatedResponses.Add(await PopulateProductDetailsAsync(res));
+            updatedResponses.Add(await PopulateOrderResponseDetailsAsync(res));
         }
         return updatedResponses;
     }
