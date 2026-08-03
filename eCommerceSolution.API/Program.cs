@@ -3,6 +3,7 @@ using eCommerceSolution.API.MiddleWares;
 using OrdersMicroService.BusinessLogicLayer;
 using OrdersMicroService.BusinessLogicLayer.HttpClients;
 using OrdersMicroService.DataAccessLayer;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +32,11 @@ builder.Services.AddHttpClient<UsersMicroserviceClient>(
     {
         client.BaseAddress = new Uri(builder.Configuration["UsersMicroservice:BaseUrl"] ?? throw new InvalidOperationException("UsersMicroservice:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
-    });
+    }).AddPolicyHandler(
+    Policy.HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
+          .WaitAndRetryAsync(retryCount: 3, 
+          retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
+    );
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(
     client =>
     {
