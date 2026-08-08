@@ -2,6 +2,7 @@ using eCommerce.Core.HttpClients;
 using eCommerceSolution.API.MiddleWares;
 using OrdersMicroService.BusinessLogicLayer;
 using OrdersMicroService.BusinessLogicLayer.HttpClients;
+using OrdersMicroService.BusinessLogicLayer.Policies;
 using OrdersMicroService.DataAccessLayer;
 using Polly;
 
@@ -27,15 +28,14 @@ builder.Services.AddCors(options =>
 });
 
 // Configure HttpClient for microservices
+// Polly is used to add resilience and transient fault handling capabilities to the HttpClient.
 builder.Services.AddHttpClient<UsersMicroserviceClient>(
     client =>
     {
         client.BaseAddress = new Uri(builder.Configuration["UsersMicroservice:BaseUrl"] ?? throw new InvalidOperationException("UsersMicroservice:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
-    }).AddPolicyHandler(
-    Policy.HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
-          .WaitAndRetryAsync(retryCount: 3, 
-          retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
+    }).AddPolicyHandler((serviceProvider, request) =>
+        serviceProvider.GetRequiredService<IUsersMicroservicePolicies>().GetRetryPolicy()
     );
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(
     client =>
