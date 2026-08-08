@@ -35,8 +35,10 @@ builder.Services.AddHttpClient<UsersMicroserviceClient>(
         client.BaseAddress = new Uri(builder.Configuration["UsersMicroservice:BaseUrl"] ?? throw new InvalidOperationException("UsersMicroservice:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     }).AddPolicyHandler((serviceProvider, request) =>
-        serviceProvider.GetRequiredService<IUsersMicroservicePolicies>().GetRetryPolicy()
-    );
+        serviceProvider.GetRequiredService<IUsersMicroservicePolicies>().GetRetryPolicy())
+     .AddPolicyHandler((serviceProvider, request) =>
+        serviceProvider.GetRequiredService<IUsersMicroservicePolicies>().GetCircuitBreakerPolicy());
+
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(
     client =>
     {

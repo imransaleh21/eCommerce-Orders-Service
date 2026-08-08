@@ -16,7 +16,7 @@ public static class DependencyInjection
         services.AddAutoMapper(cfg => { }, typeof(OrderAddRequestToOrderMappingProfile).Assembly);
         services.AddValidatorsFromAssemblyContaining<OrderAddRequestValidator>();
         services.AddScoped<IOrdersService, OrdersService>();
-        services.AddTransient<IUsersMicroservicePolicies, UsersMicroservicePolicies>();
+        services.AddSingleton<IUsersMicroservicePolicies, UsersMicroservicePolicies>();
         return services;
     }
 }
