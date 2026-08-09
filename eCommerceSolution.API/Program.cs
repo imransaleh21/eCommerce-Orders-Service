@@ -44,7 +44,8 @@ builder.Services.AddHttpClient<ProductsMicroserviceClient>(
     {
         client.BaseAddress = new Uri(builder.Configuration["ProductsMicroservice:BaseUrl"] ?? throw new InvalidOperationException("ProductsMicroservice:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
-    });
+    }).AddPolicyHandler((serviceProvider, request) =>
+        serviceProvider.GetRequiredService<IOrdersMicroservicePolicies>().GetFallbackPolicy());
 
 var app = builder.Build();
 

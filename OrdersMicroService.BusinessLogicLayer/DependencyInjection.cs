@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<OrderAddRequestValidator>();
         services.AddScoped<IOrdersService, OrdersService>();
         services.AddSingleton<IUsersMicroservicePolicies, UsersMicroservicePolicies>();
+        services.AddSingleton<IOrdersMicroservicePolicies, OrdersMicroservicePolicies>();
         return services;
     }
 }
