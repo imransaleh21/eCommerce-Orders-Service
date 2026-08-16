@@ -1,17 +1,29 @@
-﻿using OrdersMicroService.BusinessLogicLayer.DTOs;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using OrdersMicroService.BusinessLogicLayer.DTOs;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace OrdersMicroService.BusinessLogicLayer.HttpClients;
 public class ProductsMicroserviceClient
 {
     private readonly HttpClient _httpClient;
-    public ProductsMicroserviceClient(HttpClient httpClient)
+    private readonly IDistributedCache _distributedCache;
+    public ProductsMicroserviceClient(HttpClient httpClient, IDistributedCache distributedCache)
     {
         _httpClient = httpClient;
+        _distributedCache = distributedCache;
     }
 
     public async Task<ProductDTO?> GetProductByIdAsync(Guid productId)
     {
+        string cacheKey = $"Product_{productId}";
+        string? cachedProduct = await _distributedCache.GetStringAsync(cacheKey);
+
+        if (cachedProduct != null)
+        {
+            return await Task.FromResult(JsonSerializer.Deserialize<ProductDTO>(cachedProduct));
+        }
+
         HttpResponseMessage response = await _httpClient.GetAsync($"/api/products/search/product-id/{productId}");
         if (!response.IsSuccessStatusCode)
         {
@@ -27,6 +39,16 @@ public class ProductsMicroserviceClient
         {
             throw new HttpRequestException("Product not found or response content is empty.");
         }
+        // Cache the product for future requests
+        string serializedProduct = JsonSerializer.Serialize(product);
+        DistributedCacheEntryOptions distributedCacheEntryOptions = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2), // Cache for 2 minutes
+            SlidingExpiration = TimeSpan.FromMinutes(1) // Reset expiration if accessed within 1 minute
+        };
+
+        await _distributedCache.SetStringAsync(cacheKey, serializedProduct, distributedCacheEntryOptions);
+
         return product;
     }
 }

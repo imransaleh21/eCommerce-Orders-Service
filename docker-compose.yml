@@ -11,6 +11,8 @@ services:
       - MONGO_HOST=mongodb-container
       - MONGO_PORT=27017
       - MONGO_DATABASE=OrdersDatabase
+      - REDIS_HOST=redis-container
+      - REDIS_PORT=6379
       # - MONGO_USER=admin
       # - MONGO_PASS=admin
     ports:
@@ -93,6 +95,17 @@ services:
         networks:
             - ecommerce-network
         hostname: postgresql-db-container
+   
+   redis:
+        image: redis:latest
+        container_name: redis-container
+        ports:
+            - "6379:6379"
+        volumes:
+            - F:/eCommerce-Microservices/redis-cache:/data
+        networks:
+            - ecommerce-network
+        hostname: redis-container
 
 networks:
     ecommerce-network:

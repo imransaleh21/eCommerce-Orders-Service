@@ -18,6 +18,14 @@ public static class DependencyInjection
         services.AddScoped<IOrdersService, OrdersService>();
         services.AddSingleton<IUsersMicroservicePolicies, UsersMicroservicePolicies>();
         services.AddSingleton<IOrdersMicroservicePolicies, OrdersMicroservicePolicies>();
+
+        var redisConnectionTemp = configuration.GetConnectionString("RedisConnection")!;
+        var redisConnection = redisConnectionTemp.Replace("$REDIS_HOST", Environment.GetEnvironmentVariable("REDIS_HOST"))
+                                                 .Replace("$REDIS_PORT", Environment.GetEnvironmentVariable("REDIS_PORT"));
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnection;
+        });
         return services;
     }
 }
