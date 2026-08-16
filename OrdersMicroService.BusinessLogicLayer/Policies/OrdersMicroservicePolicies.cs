@@ -30,7 +30,7 @@ public class OrdersMicroservicePolicies : IOrdersMicroservicePolicies
                         QuantityInStock: 0
                     );
 
-                    var responseMessage = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                    var responseMessage = new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
                     {
                         Content = new StringContent(
                             JsonSerializer.Serialize(dummyProduct),
