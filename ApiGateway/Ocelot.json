@@ -1,0 +1,197 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/gateway/orders",
+      "DownstreamPathTemplate": "/api/orders",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "orders-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/orders/search/productid/{productId}",
+      "DownstreamPathTemplate": "/api/orders/search/productid/{productId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "orders-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/orders/search/orderid/{orderId}",
+      "DownstreamPathTemplate": "/api/orders/search/orderid/{orderId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "orders-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/orders/search/orderdate/{orderDate}",
+      "DownstreamPathTemplate": "/api/orders/search/orderdate/{orderDate}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "orders-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/orders/search/userid/{userId}",
+      "DownstreamPathTemplate": "/api/orders/search/userid/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "orders-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/orders/{orderId}",
+      "DownstreamPathTemplate": "/api/orders/{orderId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "orders-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/products",
+      "DownstreamPathTemplate": "/api/products",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "products-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "OPTIONS"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/products/search/product-id/{ProductId}",
+      "DownstreamPathTemplate": "/api/products/search/product-id/{ProductId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "products-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/products/search/{SearchString}",
+      "DownstreamPathTemplate": "/api/products/search/{SearchString}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "products-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/products/{ProductId}",
+      "DownstreamPathTemplate": "/api/products/{ProductId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "products-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "DELETE"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/auth/login",
+      "DownstreamPathTemplate": "/api/auth/login",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "users-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/auth/register",
+      "DownstreamPathTemplate": "/api/auth/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "users-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/users/{userId}",
+      "DownstreamPathTemplate": "/api/users/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "users-api-container",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5001"
+  }
+}

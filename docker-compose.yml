@@ -16,7 +16,7 @@ services:
       # - MONGO_USER=admin
       # - MONGO_PASS=admin
     ports:
-      - "7070:8080"
+      - "8070:8080"
     depends_on:
       - mongodb-container
     networks:
@@ -102,10 +102,24 @@ services:
         ports:
             - "6379:6379"
         volumes:
-            - F:/eCommerce-Microservices/redis-cache:/data
+            - D:/Software/Microservice/redis-cache:/data
         networks:
             - ecommerce-network
         hostname: redis-container
+   api-gateway-container:
+        image: imran88/ecommerce-api-gateway:v1.0
+        container_name: api-gateway-container
+        build:
+            context: .
+            dockerfile: ApiGateway/Dockerfile
+        ports:
+            - "5001:8080"
+        depends_on:
+            - orders-api-container
+            - products-api-container
+            - users-api-container
+        networks:
+            - ecommerce-network
 
 networks:
     ecommerce-network:
