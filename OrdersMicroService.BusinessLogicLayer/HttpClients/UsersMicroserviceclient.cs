@@ -32,7 +32,7 @@ namespace eCommerce.Core.HttpClients
                     return await Task.FromResult(JsonSerializer.Deserialize<UserDTO>(cacheValue));
                 }
 
-                HttpResponseMessage response = await _httpClient.GetAsync($"/api/users/{userId}");
+                HttpResponseMessage response = await _httpClient.GetAsync($"/gateway/users/{userId}");
                 if (!response.IsSuccessStatusCode)
                 {
                     if (response.StatusCode == System.Net.HttpStatusCode.NotFound)

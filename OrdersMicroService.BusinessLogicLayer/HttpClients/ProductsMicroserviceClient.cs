@@ -26,7 +26,7 @@ public class ProductsMicroserviceClient
             return await Task.FromResult(JsonSerializer.Deserialize<ProductDTO>(cachedProduct));
         }
 
-        HttpResponseMessage response = await _httpClient.GetAsync($"/api/products/search/product-id/{productId}");
+        HttpResponseMessage response = await _httpClient.GetAsync($"/gateway/products/search/product-id/{productId}");
         if (!response.IsSuccessStatusCode)
         {
             if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)

@@ -32,7 +32,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpClient<UsersMicroserviceClient>(
     client =>
     {
-        client.BaseAddress = new Uri(builder.Configuration["UsersMicroservice:BaseUrl"] ?? throw new InvalidOperationException("UsersMicroservice:BaseUrl is not configured."));
+        client.BaseAddress = new Uri(builder.Configuration["ApiGateway:BaseUrl"] ?? throw new InvalidOperationException("ApiGateway:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     }).AddPolicyHandler((serviceProvider, request) =>
         serviceProvider.GetRequiredService<IUsersMicroservicePolicies>().GetRetryPolicy())
@@ -42,7 +42,7 @@ builder.Services.AddHttpClient<UsersMicroserviceClient>(
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(
     client =>
     {
-        client.BaseAddress = new Uri(builder.Configuration["ProductsMicroservice:BaseUrl"] ?? throw new InvalidOperationException("ProductsMicroservice:BaseUrl is not configured."));
+        client.BaseAddress = new Uri(builder.Configuration["ApiGateway:BaseUrl"] ?? throw new InvalidOperationException("ApiGateway:BaseUrl is not configured."));
         client.DefaultRequestHeaders.Add("Accept", "application/json");
     }).AddPolicyHandler((serviceProvider, request) =>
         serviceProvider.GetRequiredService<IOrdersMicroservicePolicies>().GetFallbackPolicy());

@@ -102,7 +102,21 @@
         "POST",
         "PUT",
         "OPTIONS"
-      ]
+      ],
+      "QoSOptions": {
+        "Timeout": 5000,
+        "MinimumThroughput": 3,
+        "BreakDuration": 10000
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "EnableHeaders": true,
+        "Period": "1m",
+        "wait": "15s",
+        "Limit": 5,
+        "StatusCode": 429
+      }
     },
     {
       "UpstreamPathTemplate": "/gateway/products/search/product-id/{ProductId}",
