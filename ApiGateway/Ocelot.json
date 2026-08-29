@@ -14,7 +14,11 @@
         "GET",
         "POST",
         "OPTIONS"
-      ]
+      ],
+      "FileCacheOptions": {
+        "TtlSeconds": 30,
+        "Region": "OrdersApiCache"
+      }
     },
     {
       "UpstreamPathTemplate": "/gateway/orders/search/productid/{productId}",
