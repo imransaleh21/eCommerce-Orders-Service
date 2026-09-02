@@ -13,12 +13,16 @@ services:
       - MONGO_DATABASE=OrdersDatabase
       - REDIS_HOST=redis-container
       - REDIS_PORT=6379
-      # - MONGO_USER=admin
-      # - MONGO_PASS=admin
+      - RABBITMQ_HOST=rabbitmq-container
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=guest123
     ports:
       - "8070:8080"
     depends_on:
       - mongodb-container
+      - redis-container
+      - rabbitmq-container
     networks:
       - ecommerce-network
     
@@ -33,10 +37,15 @@ services:
         - MYSQL_USER=root
         - MYSQL_PASS=mysql
         - MYSQL_DATABASE=eCommerceProducts
+        - RABBITMQ_HOST=rabbitmq-container
+        - RABBITMQ_PORT=5672
+        - RABBITMQ_DEFAULT_USER=user
+        - RABBITMQ_DEFAULT_PASS=guest123
     ports:
         - "6060:8080"
     depends_on:
         - mysql-db-container
+        - rabbitmq-container
     networks:
         - ecommerce-network
 
@@ -121,6 +130,18 @@ services:
         networks:
             - ecommerce-network
 
+   rabbitmq-container:
+        image: rabbitmq:management
+        container_name: rabbitmq-container
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        environment:
+            RABBITMQ_DEFAULT_USER: user
+            RABBITMQ_DEFAULT_PASS: guest123
+        networks:
+            - ecommerce-network
+        hostname: rabbitmq-container
 networks:
     ecommerce-network:
         driver: bridge
