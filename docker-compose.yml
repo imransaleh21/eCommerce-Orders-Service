@@ -15,8 +15,8 @@ services:
       - REDIS_PORT=6379
       - RABBITMQ_HOST=rabbitmq-container
       - RABBITMQ_PORT=5672
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=guest123
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=guest123
     ports:
       - "8070:8080"
     depends_on:
@@ -39,8 +39,8 @@ services:
         - MYSQL_DATABASE=eCommerceProducts
         - RABBITMQ_HOST=rabbitmq-container
         - RABBITMQ_PORT=5672
-        - RABBITMQ_DEFAULT_USER=user
-        - RABBITMQ_DEFAULT_PASS=guest123
+        - RABBITMQ_USER=user
+        - RABBITMQ_PASS=guest123
     ports:
         - "6060:8080"
     depends_on:
@@ -105,16 +105,17 @@ services:
             - ecommerce-network
         hostname: postgresql-db-container
    
-   redis:
+   redis-container:
         image: redis:latest
         container_name: redis-container
         ports:
             - "6379:6379"
         volumes:
-            - D:/Software/Microservice/redis-cache:/data
+            -  F:/eCommerce-Microservices/redis-cache:/data
         networks:
             - ecommerce-network
         hostname: redis-container
+
    api-gateway-container:
         image: imran88/ecommerce-api-gateway:v1.0
         container_name: api-gateway-container
@@ -142,6 +143,7 @@ services:
         networks:
             - ecommerce-network
         hostname: rabbitmq-container
+
 networks:
     ecommerce-network:
         driver: bridge
