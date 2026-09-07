@@ -17,6 +17,8 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=user
       - RABBITMQ_PASS=guest123
+      - RABBITMQ_PRODUCTS_EXCHANGE=products-exchange
+      - RABBITMQ_ORDERS_PRODUCTS_QUEUE=orders-products-update-queue
     ports:
       - "8070:8080"
     depends_on:
@@ -41,6 +43,7 @@ services:
         - RABBITMQ_PORT=5672
         - RABBITMQ_USER=user
         - RABBITMQ_PASS=guest123
+        - RABBITMQ_PRODUCTS_EXCHANGE=products-exchange
     ports:
         - "6060:8080"
     depends_on:
