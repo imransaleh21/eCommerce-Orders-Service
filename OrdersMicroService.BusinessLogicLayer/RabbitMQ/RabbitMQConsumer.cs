@@ -1,5 +1,5 @@
-﻿using DnsClient.Internal;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -11,9 +11,9 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
     private readonly IConfiguration _configuration;
     private readonly IConnection _connection;
     private readonly IChannel _channel;
-    private readonly ILogger _logger;
+    private readonly ILogger<RabbitMQConsumer> _logger;
 
-    public RabbitMQConsumer(IConfiguration configuration, ILogger logger)
+    public RabbitMQConsumer(IConfiguration configuration, ILogger<RabbitMQConsumer> logger)
     {
         _configuration = configuration;
         _logger = logger;

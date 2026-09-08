@@ -6,6 +6,7 @@ using OrdersMicroService.BusinessLogicLayer.Validators;
 using OrdersMicroService.BusinessLogicLayer.ServicesContract;
 using OrdersMicroService.BusinessLogicLayer.Services;
 using OrdersMicroService.BusinessLogicLayer.Policies;
+using OrdersMicroService.BusinessLogicLayer.RabbitMQ;
 
 namespace OrdersMicroService.BusinessLogicLayer;
 public static class DependencyInjection
@@ -18,6 +19,8 @@ public static class DependencyInjection
         services.AddScoped<IOrdersService, OrdersService>();
         services.AddSingleton<IUsersMicroservicePolicies, UsersMicroservicePolicies>();
         services.AddSingleton<IOrdersMicroservicePolicies, OrdersMicroservicePolicies>();
+        services.AddSingleton<IRabbitMQConsumer, RabbitMQConsumer>();
+        services.AddHostedService<RabbitMQProductUpdateHostedService>();
 
         var redisConnectionTemp = configuration.GetConnectionString("RedisConnection")!;
         var redisConnection = redisConnectionTemp.Replace("$REDIS_HOST", Environment.GetEnvironmentVariable("REDIS_HOST"))
@@ -26,6 +29,7 @@ public static class DependencyInjection
         {
             options.Configuration = redisConnection;
         });
+
         return services;
     }
 }
