@@ -31,7 +31,8 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
 
     public async Task ConsumeMessageAsync()
     {
-        string routeKey = "product.name.updated";
+        const string updateRouteKey = "product.name.updated";
+        const string deleteRouteKey = "product.deleted";
         string queueName = _configuration["RABBITMQ_ORDERS_PRODUCTS_QUEUE"]!;
         // Create queue if it doesn't exist
         await _channel.QueueDeclareAsync(
@@ -52,7 +53,12 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
         await _channel.QueueBindAsync(
             queue: queueName,
             exchange: exchangeName,
-            routingKey: routeKey
+            routingKey: updateRouteKey
+        );
+        await _channel.QueueBindAsync(
+            queue: queueName,
+            exchange: exchangeName,
+            routingKey: deleteRouteKey
         );
 
         // Create a consumer to listen for messages
@@ -64,12 +70,28 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
             {
                 var body = eventArgs.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                var productUpdateMessage = JsonSerializer.Deserialize<ProductNameUpdateMsg>(message);
 
-                if (productUpdateMessage is not null)
+                switch (eventArgs.RoutingKey)
                 {
-                    _logger.LogInformation( $"Received product update: " + $"ProductID={productUpdateMessage.ProductId}, " + $"NewName={productUpdateMessage.NewProductName}");
-                    // Business logic goes here
+                    case updateRouteKey:
+                        var productUpdateMessage = JsonSerializer.Deserialize<ProductNameUpdateMsg>(message);
+                        if (productUpdateMessage is not null)
+                        {
+                            _logger.LogInformation($"Received product update: " + $"ProductID={productUpdateMessage.ProductId}, " + $"NewName={productUpdateMessage.NewProductName}");
+                            // Business logic goes here
+                        }
+                        break;
+                    case deleteRouteKey:
+                        var productDeleteMessage = JsonSerializer.Deserialize<ProductDeleteMsg>(message);
+                        if (productDeleteMessage is not null)
+                        {
+                            _logger.LogInformation($"Received product delete: " + $"ProductID={productDeleteMessage.ProductId}, " + $"ProductName={productDeleteMessage.ProductName}");
+                            // Business logic goes here
+                        }
+                        break;
+                    default:
+                        _logger.LogWarning($"Received message with unknown routing key: {eventArgs.RoutingKey}");
+                        break;
                 }
                 // Acknowledge successful processing
                 await _channel.BasicAckAsync( eventArgs.DeliveryTag, multiple: false);

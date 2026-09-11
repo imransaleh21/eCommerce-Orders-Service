@@ -20,7 +20,7 @@ public static class DependencyInjection
         services.AddSingleton<IUsersMicroservicePolicies, UsersMicroservicePolicies>();
         services.AddSingleton<IOrdersMicroservicePolicies, OrdersMicroservicePolicies>();
         services.AddSingleton<IRabbitMQConsumer, RabbitMQConsumer>();
-        services.AddHostedService<RabbitMQProductUpdateHostedService>();
+        services.AddHostedService<RabbitMQConsumerHostedService>();
 
         var redisConnectionTemp = configuration.GetConnectionString("RedisConnection")!;
         var redisConnection = redisConnectionTemp.Replace("$REDIS_HOST", Environment.GetEnvironmentVariable("REDIS_HOST"))

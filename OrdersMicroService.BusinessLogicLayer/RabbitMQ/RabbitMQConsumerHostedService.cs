@@ -2,10 +2,10 @@
 
 namespace OrdersMicroService.BusinessLogicLayer.RabbitMQ;
 
-public class RabbitMQProductUpdateHostedService : IHostedService
+public class RabbitMQConsumerHostedService : IHostedService
 {
     private readonly IRabbitMQConsumer _rabbitMQConsumer;
-    public RabbitMQProductUpdateHostedService(IRabbitMQConsumer rabbitMQConsumer)
+    public RabbitMQConsumerHostedService(IRabbitMQConsumer rabbitMQConsumer)
     {
         _rabbitMQConsumer = rabbitMQConsumer;
     }

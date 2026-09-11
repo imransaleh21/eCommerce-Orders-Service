@@ -18,7 +18,7 @@ services:
       - RABBITMQ_USER=user
       - RABBITMQ_PASS=guest123
       - RABBITMQ_PRODUCTS_EXCHANGE=products-exchange
-      - RABBITMQ_ORDERS_PRODUCTS_QUEUE=orders-products-update-queue
+      - RABBITMQ_ORDERS_PRODUCTS_QUEUE=orders-products-queue
     ports:
       - "8070:8080"
     depends_on:
