@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using OrdersMicroService.BusinessLogicLayer.DTOs;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -11,12 +13,14 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
     private readonly IConfiguration _configuration;
     private readonly IConnection _connection;
     private readonly IChannel _channel;
+    private readonly IDistributedCache _distributedCache;
     private readonly ILogger<RabbitMQConsumer> _logger;
 
-    public RabbitMQConsumer(IConfiguration configuration, ILogger<RabbitMQConsumer> logger)
+    public RabbitMQConsumer(IConfiguration configuration, ILogger<RabbitMQConsumer> logger, IDistributedCache distributedCache)
     {
         _configuration = configuration;
         _logger = logger;
+        _distributedCache = distributedCache;
         var connectionFactory = new ConnectionFactory
         {
             HostName = _configuration["RABBITMQ_HOST"]!,
@@ -78,7 +82,27 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
                         if (productUpdateMessage is not null)
                         {
                             _logger.LogInformation($"Received product update: " + $"ProductID={productUpdateMessage.ProductId}, " + $"NewName={productUpdateMessage.NewProductName}");
-                            // Business logic goes here
+                            // --- Update the product name in the cache ---
+                            // Check if the product is already cached
+                            string cacheKey = $"Product_{productUpdateMessage.ProductId}";
+                            string? cachedProduct = await _distributedCache.GetStringAsync(cacheKey);
+                            if (cachedProduct != null)
+                            {
+                                ProductDTO? cachedProductDTO = JsonSerializer.Deserialize<ProductDTO>(cachedProduct);
+                                cachedProductDTO = cachedProductDTO with
+                                {
+                                    ProductName = productUpdateMessage.NewProductName
+                                };
+                                // Update the cached product name
+                                string serializedProduct = JsonSerializer.Serialize(cachedProductDTO);
+                                DistributedCacheEntryOptions distributedCacheEntryOptions = new DistributedCacheEntryOptions
+                                {
+                                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3), // Cache for 3 minutes
+                                    SlidingExpiration = TimeSpan.FromMinutes(1) // Reset expiration if accessed within 1 minute
+                                };
+
+                                await _distributedCache.SetStringAsync(cacheKey, serializedProduct, distributedCacheEntryOptions);
+                            }
                         }
                         break;
                     case deleteRouteKey:
@@ -86,7 +110,9 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
                         if (productDeleteMessage is not null)
                         {
                             _logger.LogInformation($"Received product delete: " + $"ProductID={productDeleteMessage.ProductId}, " + $"ProductName={productDeleteMessage.ProductName}");
-                            // Business logic goes here
+                            // --- Remove the product from the cache ---
+                            string cacheKey = $"Product_{productDeleteMessage.ProductId}";
+                            await _distributedCache.RemoveAsync(cacheKey);
                         }
                         break;
                     default:
